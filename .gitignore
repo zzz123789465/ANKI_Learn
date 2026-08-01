@@ -1,0 +1,53 @@
+# Projectless workspace folders
+/outputs/
+/work/
+
+# Dependencies
+node_modules/
+vendor/
+.venv/
+venv/
+env/
+
+# Build and coverage output
+dist/
+build/
+out/
+coverage/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+*.egg-info/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local tool metadata
+.codex/
+.agents/
