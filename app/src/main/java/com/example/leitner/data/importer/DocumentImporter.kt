@@ -37,11 +37,15 @@ class DocumentImporter @Inject constructor(
         val stream = context.contentResolver.openInputStream(uri) ?: error("無法開啟 Word 檔案")
         val documentXml = stream.use { input ->
             ZipInputStream(input).use { zip ->
+                var result: ByteArray? = null
                 while (true) {
                     val entry = zip.nextEntry ?: break
-                    if (entry.name == "word/document.xml") return@use zip.readBytes()
+                    if (entry.name == "word/document.xml") {
+                        result = zip.readBytes()
+                        break
+                    }
                 }
-                null
+                result
             }
         } ?: error("不是有效的 .docx 檔案")
 
@@ -70,19 +74,51 @@ class DocumentImporter @Inject constructor(
     }
 }
 
+private val easyTestVocabularyLine = Regex("^[●•·▪‣\\uF0AC]\\s*([A-Za-z][A-Za-z'-]*)\\s+(.+)$")
+private val sectionHeader = Regex("^\\d+-\\d+$")
+private val pageNumber = Regex("^\\d+$")
+
+/** Parses EasyTest-style entries: bullet + English word + Chinese meanings + optional example line. */
+private fun parseEasyTestVocabulary(lines: List<String>): List<CardDraft> {
+    val cards = mutableListOf<CardDraft>()
+    var index = 0
+    while (index < lines.size) {
+        val match = easyTestVocabularyLine.matchEntire(lines[index])
+        if (match == null) {
+            index++
+            continue
+        }
+
+        val front = match.groupValues[1]
+        val meaning = match.groupValues[2].trim()
+        val next = lines.getOrNull(index + 1)
+        val hasExample = next != null && next.contains(' ') &&
+            !next.first().toString().matches(Regex("[●•·▪‣\\uF0AC]")) &&
+            !sectionHeader.matches(next) && !pageNumber.matches(next)
+        val back = if (hasExample) "$meaning\n\n例句：$next" else meaning
+        cards += CardDraft(front, back)
+        index += if (hasExample) 2 else 1
+    }
+    return cards.distinctBy { it.front.lowercase() to it.back.lowercase() }
+}
+
 fun parseFlashcardText(text: String): List<CardDraft> {
     val lines = text.lineSequence()
         .map { it.replace('\u00a0', ' ').trim() }
-        .map { it.replace(Regex("^[•·●▪‣-]\\s*"), "") }
         .filter { it.isNotBlank() }
         .toList()
+
+    val easyTestCards = parseEasyTestVocabulary(lines)
+    if (easyTestCards.size >= 3) return easyTestCards
+
     val separator = Regex("\\s*(?:\\t+|[|｜]|[:：=])\\s*")
     val cards = mutableListOf<CardDraft>()
     val unpaired = mutableListOf<String>()
     lines.forEach { line ->
-        val parts = line.split(separator, limit = 2)
+        val cleaned = line.replace(Regex("^[•·●▪‣-]\\s*"), "")
+        val parts = cleaned.split(separator, limit = 2)
         if (parts.size == 2 && parts[0].isNotBlank() && parts[1].isNotBlank()) cards += CardDraft(parts[0].trim(), parts[1].trim())
-        else unpaired += line
+        else if (!sectionHeader.matches(cleaned) && !pageNumber.matches(cleaned)) unpaired += cleaned
     }
     unpaired.chunked(2).forEach { pair -> if (pair.size == 2) cards += CardDraft(pair[0], pair[1]) }
     return cards.distinctBy { it.front.lowercase() to it.back.lowercase() }
