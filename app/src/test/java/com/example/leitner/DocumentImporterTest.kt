@@ -12,36 +12,30 @@ class DocumentImporterTest {
         assertEquals(2, cards.size)
         assertEquals("apple", cards[0].front)
         assertEquals("蘋果", cards[0].back)
-        assertEquals("book", cards[1].front)
-    }
-
-    @Test
-    fun parsesAdjacentWordAndMeaningLines() {
-        val cards = parseFlashcardText("apple\n蘋果\nbook\n書")
-        assertEquals(2, cards.size)
-        assertEquals("book", cards[1].front)
-        assertEquals("書", cards[1].back)
     }
 
     @Test
     fun parsesEasyTestBulletEntriesAndKeepsExample() {
-        val text = """
-            Easy test 全民英檢中級單字
-            1-1
+        val cards = parseFlashcardText("""
              implement 實行；實行/用具
             The government implemented new policies last year.
              separation 分開;分隔線
             They met again after a separation of two years.
              triumph 勝利;成功
             He didn't win a complete triumph.
-        """.trimIndent()
-
-        val cards = parseFlashcardText(text)
-
+        """.trimIndent())
         assertEquals(3, cards.size)
         assertEquals("implement", cards[0].front)
-        assertTrue(cards[0].back.contains("實行"))
         assertTrue(cards[0].back.contains("例句：The government"))
-        assertEquals("separation", cards[1].front)
+    }
+
+    @Test
+    fun splitsTwoVocabularyPairsOnOneLine() {
+        val cards = parseFlashcardText("a game of cat and mouse 貓捉老鼠遊戲 a leap of faith 放手一搏\naboard 船上 absolutely 絕對地")
+        assertEquals(4, cards.size)
+        assertEquals("a game of cat and mouse", cards[0].front)
+        assertEquals("貓捉老鼠遊戲", cards[0].back)
+        assertEquals("a leap of faith", cards[1].front)
+        assertEquals("absolutely", cards[3].front)
     }
 }

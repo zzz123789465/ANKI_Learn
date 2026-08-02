@@ -86,6 +86,8 @@ class DocumentImporter @Inject constructor(
 private val easyTestVocabularyLine = Regex("^[●•·▪‣\\uF06C\\uF0AC]\\s*([A-Za-z][A-Za-z'-]*)\\s+(.+)$")
 private val sectionHeader = Regex("^\\d+-\\d+$")
 private val pageNumber = Regex("^\\d+$")
+private val columnBoundary = Regex("(?<=[\\u3400-\\u9fff])\\s+(?=[A-Za-z])")
+private val chineseCharacter = Regex("[\\u3400-\\u9fff]")
 
 private fun parseEasyTestVocabulary(lines: List<String>): List<CardDraft> {
     val cards = mutableListOf<CardDraft>()
@@ -107,10 +109,24 @@ private fun parseEasyTestVocabulary(lines: List<String>): List<CardDraft> {
     return cards.distinctBy { it.front.lowercase() to it.back.lowercase() }
 }
 
+/** Splits lines containing two or more English/Chinese vocabulary pairs. */
+private fun parseBilingualColumnLine(line: String): List<CardDraft> {
+    if (line.contains("單字一覽表") || line.matches(Regex("^[A-Z]$"))) return emptyList()
+    return line.split(columnBoundary).mapNotNull { chunk ->
+        val chineseStart = chineseCharacter.find(chunk)?.range?.first ?: return@mapNotNull null
+        val front = chunk.substring(0, chineseStart).trim()
+        val back = chunk.substring(chineseStart).trim()
+        if (front.firstOrNull()?.isLetter() == true && front.any { it.isLetter() } && back.isNotBlank()) CardDraft(front, back) else null
+    }
+}
+
 fun parseFlashcardText(text: String): List<CardDraft> {
     val lines = text.lineSequence().map { it.replace('\u00a0', ' ').trim() }.filter { it.isNotBlank() }.toList()
     val easyTestCards = parseEasyTestVocabulary(lines)
     if (easyTestCards.size >= 3) return easyTestCards
+
+    val columnCards = lines.flatMap(::parseBilingualColumnLine).distinctBy { it.front.lowercase() to it.back.lowercase() }
+    if (columnCards.size >= 3) return columnCards
 
     val separator = Regex("\\s*(?:\\t+|[|｜]|[:：=])\\s*")
     val cards = mutableListOf<CardDraft>()
