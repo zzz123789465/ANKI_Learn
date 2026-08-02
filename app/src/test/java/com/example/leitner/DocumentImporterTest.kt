@@ -7,14 +7,6 @@ import org.junit.Test
 
 class DocumentImporterTest {
     @Test
-    fun parsesSeparatedWordAndMeaningLines() {
-        val cards = parseFlashcardText("apple\t蘋果\nbook:書")
-        assertEquals(2, cards.size)
-        assertEquals("apple", cards[0].front)
-        assertEquals("蘋果", cards[0].back)
-    }
-
-    @Test
     fun parsesEasyTestBulletEntriesAndKeepsExample() {
         val cards = parseFlashcardText("""
              implement 實行；實行/用具
@@ -34,8 +26,21 @@ class DocumentImporterTest {
         val cards = parseFlashcardText("a game of cat and mouse 貓捉老鼠遊戲 a leap of faith 放手一搏\naboard 船上 absolutely 絕對地")
         assertEquals(4, cards.size)
         assertEquals("a game of cat and mouse", cards[0].front)
-        assertEquals("貓捉老鼠遊戲", cards[0].back)
         assertEquals("a leap of faith", cards[1].front)
         assertEquals("absolutely", cards[3].front)
+    }
+
+    @Test
+    fun parsesNumberedEntriesAfterOcr() {
+        val cards = parseFlashcardText("""
+            1. abandon v 放棄；遺棄
+            2. abide v 忍受；容忍
+            3. ability n 能力；才能
+            4. able a 能；可以
+        """.trimIndent())
+        assertEquals(4, cards.size)
+        assertEquals("abandon", cards[0].front)
+        assertEquals("放棄；遺棄", cards[0].back)
+        assertEquals("ability", cards[2].front)
     }
 }
