@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,8 +32,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun CardListScreen(viewModel: CardListViewModel = hiltViewModel()) {
     val cards by viewModel.cards.collectAsStateWithLifecycle()
     val importState by viewModel.importState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let { viewModel.importDocument(it, null) }
+        uri?.let { viewModel.importDocument(it, context.contentResolver.getType(it)) }
     }
 
     Scaffold(
