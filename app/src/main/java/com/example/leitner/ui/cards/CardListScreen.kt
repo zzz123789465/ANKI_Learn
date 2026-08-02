@@ -29,21 +29,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
-fun CardListScreen(viewModel: CardListViewModel = hiltViewModel()) {
+fun CardListScreen(
+    onOpenGithubLibrary: () -> Unit,
+    viewModel: CardListViewModel = hiltViewModel()
+) {
     val cards by viewModel.cards.collectAsStateWithLifecycle()
     val importState by viewModel.importState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { viewModel.importDocument(it, context.contentResolver.getType(it)) }
     }
-
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = viewModel::addSampleCard) {
-                Icon(Icons.Rounded.Add, contentDescription = "新增卡片")
-            }
+    Scaffold(floatingActionButton = {
+        FloatingActionButton(onClick = viewModel::addSampleCard) {
+            Icon(Icons.Rounded.Add, contentDescription = "新增卡片")
         }
-    ) { padding ->
+    }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(20.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("我的卡片", style = MaterialTheme.typography.headlineMedium)
@@ -54,12 +54,13 @@ fun CardListScreen(viewModel: CardListViewModel = hiltViewModel()) {
                     Text("匯入", Modifier.padding(start = 6.dp))
                 }
             }
-            Text("支援 PDF 與 Word .docx；每行可用 Tab、冒號或等號分隔單字與解釋。", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp, bottom = 12.dp))
+            Text("支援 PDF 與 Word .docx；也可從 GitHub 公開卡組庫下載 .apkg。", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp, bottom = 8.dp))
+            OutlinedGithubButton(onClick = onOpenGithubLibrary)
             when (val state = importState) {
                 ImportState.Idle -> Unit
-                ImportState.Importing -> Text("正在解析文件並建立卡片…", color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 10.dp))
-                is ImportState.Success -> Text("已匯入 ${state.count} 張卡片", color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 10.dp))
-                is ImportState.Error -> Text("匯入失敗：${state.message}", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 10.dp))
+                ImportState.Importing -> Text("正在解析文件並建立卡片…", color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 10.dp))
+                is ImportState.Success -> Text("已匯入 ${state.count} 張卡片", color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 10.dp))
+                is ImportState.Error -> Text("匯入失敗：${state.message}", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(vertical = 10.dp))
             }
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(cards, key = { it.id }) { card ->
@@ -73,5 +74,12 @@ fun CardListScreen(viewModel: CardListViewModel = hiltViewModel()) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun OutlinedGithubButton(onClick: () -> Unit) {
+    androidx.compose.material3.OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Text("搜尋 GitHub 卡組並匯入 .apkg")
     }
 }
