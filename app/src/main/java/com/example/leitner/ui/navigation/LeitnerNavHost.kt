@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.List
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -19,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.leitner.ui.cards.CardListScreen
 import com.example.leitner.ui.dashboard.DashboardScreen
 import com.example.leitner.ui.review.ReviewScreen
+import com.example.leitner.ui.settings.SettingsScreen
 
 @Composable
 fun LeitnerNavHost() {
@@ -27,7 +29,11 @@ fun LeitnerNavHost() {
     val currentRoute = backStack?.destination?.route
     Scaffold(bottomBar = {
         NavigationBar {
-            val items = listOf("dashboard" to ("首頁" to Icons.Rounded.Home), "cards" to ("卡片" to Icons.Rounded.List))
+            val items = listOf(
+                "dashboard" to ("首頁" to Icons.Rounded.Home),
+                "cards" to ("卡片" to Icons.Rounded.List),
+                "settings" to ("設定" to Icons.Rounded.Settings)
+            )
             items.forEach { (route, item) ->
                 NavigationBarItem(
                     selected = currentRoute == route,
@@ -42,6 +48,7 @@ fun LeitnerNavHost() {
             composable("dashboard") { DashboardScreen(onReview = { navController.navigate("review") }, onAddCard = { navController.navigate("cards") }) }
             composable("cards") { CardListScreen() }
             composable("review") { ReviewScreen(onClose = { navController.popBackStack() }) }
+            composable("settings") { SettingsScreen() }
         }
     }
 }

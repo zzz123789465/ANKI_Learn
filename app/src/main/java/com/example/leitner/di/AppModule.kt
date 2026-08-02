@@ -5,7 +5,9 @@ import androidx.room.Room
 import com.example.leitner.data.local.CardDao
 import com.example.leitner.data.local.LeitnerDatabase
 import com.example.leitner.data.repository.CardRepositoryImpl
+import com.example.leitner.data.settings.StudySettingsRepositoryImpl
 import com.example.leitner.domain.repository.CardRepository
+import com.example.leitner.domain.settings.StudySettingsRepository
 import com.example.leitner.util.DateProvider
 import com.example.leitner.util.SystemDateProvider
 import dagger.Binds
@@ -32,4 +34,5 @@ object DatabaseModule {
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindRepository(impl: CardRepositoryImpl): CardRepository
+    @Binds @Singleton abstract fun bindStudySettings(impl: StudySettingsRepositoryImpl): StudySettingsRepository
 }

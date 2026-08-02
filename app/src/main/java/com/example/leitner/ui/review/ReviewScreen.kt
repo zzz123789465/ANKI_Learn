@@ -30,11 +30,21 @@ fun ReviewScreen(onClose: () -> Unit, viewModel: ReviewViewModel = hiltViewModel
     val state by viewModel.state.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Text("今日複習", style = MaterialTheme.typography.headlineMedium)
+        if (!state.loading) {
+            Text("今日進度：${state.completedToday} / ${state.dailyLimit}", style = MaterialTheme.typography.labelLarge)
+        }
         when {
             state.loading -> Text("載入中…")
-            state.current == null -> { Text("今天沒有待複習卡片。", style = MaterialTheme.typography.titleLarge); Button(onClick = onClose) { Text("返回首頁") } }
+            state.quotaReached -> {
+                Text("今天的抽卡額度已用完。", style = MaterialTheme.typography.titleLarge)
+                Button(onClick = onClose) { Text("返回首頁") }
+            }
+            state.current == null -> {
+                Text("今天沒有待複習卡片。", style = MaterialTheme.typography.titleLarge)
+                Button(onClick = onClose) { Text("返回首頁") }
+            }
             else -> {
-                Text("${state.index + 1} / ${state.cards.size}")
+                Text("本次 ${state.index + 1} / ${state.cards.size}")
                 val card = state.current!!
                 FlipCard(card.front, card.back, state.flipped, viewModel::flip, Modifier.fillMaxWidth().weight(1f))
                 if (state.flipped) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
