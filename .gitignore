@@ -2,6 +2,14 @@
 /outputs/
 /work/
 
+# Android / Gradle
+.gradle/
+local.properties
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+
 # Dependencies
 node_modules/
 vendor/
@@ -11,7 +19,6 @@ env/
 
 # Build and coverage output
 dist/
-build/
 out/
 coverage/
 .next/
@@ -47,6 +54,7 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+*.iml
 
 # Local tool metadata
 .codex/
