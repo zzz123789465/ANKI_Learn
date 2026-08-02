@@ -15,8 +15,7 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0"
-
+        versionName = "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
@@ -24,10 +23,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
@@ -35,15 +31,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
-
     packaging.resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
-
-    ksp {
-        arg("room.schemaLocation", "$projectDir/schemas")
-    }
+    ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 }
 
 dependencies {
@@ -68,6 +59,8 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.53.1")
     ksp("com.google.dagger:hilt-compiler:2.53.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")

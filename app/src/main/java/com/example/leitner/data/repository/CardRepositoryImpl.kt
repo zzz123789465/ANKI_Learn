@@ -8,6 +8,7 @@ import com.example.leitner.data.mapper.toDomain
 import com.example.leitner.domain.model.BoxSummary
 import com.example.leitner.domain.model.Flashcard
 import com.example.leitner.domain.model.LeitnerBox
+import com.example.leitner.domain.repository.CardDraft
 import com.example.leitner.domain.repository.CardRepository
 import com.example.leitner.domain.repository.ReviewAnswer
 import com.example.leitner.domain.repository.ReviewResult
@@ -43,11 +44,33 @@ class CardRepositoryImpl @Inject constructor(
     override suspend fun addCard(front: String, back: String, boxNumber: Int): Long {
         require(front.isNotBlank() && back.isNotBlank())
         val now = dateProvider.currentTimeMillis()
-        return dao.insert(CardEntity(
-            front = front.trim(), back = back.trim(), boxNumber = LeitnerBox.fromNumber(boxNumber).number,
-            nextReviewEpochDay = dateProvider.today().toEpochDay(), createdAtMillis = now, updatedAtMillis = now
-        ))
+        return dao.insert(newEntity(front, back, boxNumber, now))
     }
+
+    override suspend fun addCards(cards: List<CardDraft>, boxNumber: Int): Int {
+        if (cards.isEmpty()) return 0
+        val validBox = LeitnerBox.fromNumber(boxNumber)
+        val now = dateProvider.currentTimeMillis()
+        return database.withTransaction {
+            var inserted = 0
+            cards.forEach { draft ->
+                if (draft.front.isNotBlank() && draft.back.isNotBlank()) {
+                    dao.insert(newEntity(draft.front, draft.back, validBox.number, now))
+                    inserted++
+                }
+            }
+            inserted
+        }
+    }
+
+    private fun newEntity(front: String, back: String, boxNumber: Int, now: Long) = CardEntity(
+        front = front.trim(),
+        back = back.trim(),
+        boxNumber = LeitnerBox.fromNumber(boxNumber).number,
+        nextReviewEpochDay = dateProvider.today().toEpochDay(),
+        createdAtMillis = now,
+        updatedAtMillis = now
+    )
 
     override suspend fun updateCard(id: Long, front: String, back: String, boxNumber: Int) {
         require(front.isNotBlank() && back.isNotBlank())
@@ -66,8 +89,10 @@ class CardRepositoryImpl @Inject constructor(
         val nextDate = ReviewScheduler.nextReviewDate(nextBox, dateProvider.today())
         val now = dateProvider.currentTimeMillis()
         dao.update(current.copy(
-            boxNumber = nextBox.number, nextReviewEpochDay = nextDate.toEpochDay(),
-            lastReviewedAtMillis = now, updatedAtMillis = now,
+            boxNumber = nextBox.number,
+            nextReviewEpochDay = nextDate.toEpochDay(),
+            lastReviewedAtMillis = now,
+            updatedAtMillis = now,
             correctCount = current.correctCount + if (answer == ReviewAnswer.CORRECT) 1 else 0,
             incorrectCount = current.incorrectCount + if (answer == ReviewAnswer.INCORRECT) 1 else 0
         ))
